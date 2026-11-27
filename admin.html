@@ -1,16 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Staytune Maputo Admin</title>
 
 <style>
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-  margin: 0;
-  padding: 25px 15px;
-  background: #edf5ff;
   font-family: Arial, sans-serif;
+  background: #edf5ff;
+  padding: 20px;
 }
 
 .panel {
@@ -27,9 +33,14 @@ h1 {
   text-align: center;
 }
 
+p {
+  text-align: center;
+  color: #666;
+}
+
 label {
   display: block;
-  margin-top: 20px;
+  margin-top: 22px;
   font-weight: bold;
 }
 
@@ -41,12 +52,13 @@ input {
   border-radius: 8px;
 }
 
-img {
+#preview {
+  display: none;
   width: 100%;
   max-height: 250px;
   object-fit: contain;
   margin-top: 15px;
-  display: none;
+  border-radius: 10px;
 }
 
 button {
@@ -55,8 +67,8 @@ button {
   margin-top: 15px;
   border: none;
   border-radius: 8px;
-  font-size: 15px;
   font-weight: bold;
+  font-size: 15px;
   cursor: pointer;
 }
 
@@ -76,9 +88,11 @@ button {
 }
 
 #status {
+  margin-top: 18px;
   text-align: center;
-  margin-top: 15px;
+  color: #1877f2;
 }
+
 </style>
 </head>
 
@@ -88,14 +102,20 @@ button {
 
 <h1>STAYTUNE MAPUTO</h1>
 
-<p>Manage your landing page content here.</p>
+<p>Manage your landing page content.</p>
 
-<label>Upload Image</label>
-<input type="file" id="imageFile" accept="image/*">
+<label>Upload New Image</label>
+
+<input
+  type="file"
+  id="imageFile"
+  accept="image/*"
+>
 
 <img id="preview" alt="Image preview">
 
 <label>Insert Destination Link</label>
+
 <input
   type="url"
   id="destination"
@@ -110,7 +130,8 @@ SAVE / PUBLISH
 DELETE PREVIOUS IMAGE
 </button>
 
-<button class="view" onclick="location.href='index.html'">
+<button class="view"
+  onclick="location.href='index.html'">
 VIEW LANDING PAGE
 </button>
 
@@ -119,113 +140,169 @@ VIEW LANDING PAGE
 </div>
 
 <script>
-const STORAGE_KEY = "staytuneMaputoContent";
+
+const KEY = "staytuneMaputoContent";
 
 let selectedImage = "";
 
-const fileInput = document.getElementById("imageFile");
-const preview = document.getElementById("preview");
-const destination = document.getElementById("destination");
-const status = document.getElementById("status");
+const fileInput =
+document.getElementById("imageFile");
 
-// Load existing content
-const current = JSON.parse(
-  localStorage.getItem(STORAGE_KEY) || "null"
-);
+const preview =
+document.getElementById("preview");
 
-if (current) {
-  selectedImage = current.image || "";
-  destination.value = current.url || "";
+const destination =
+document.getElementById("destination");
 
-  if (selectedImage) {
-    preview.src = selectedImage;
-    preview.style.display = "block";
+const status =
+document.getElementById("status");
+
+// Load previous content
+
+try {
+
+  const oldContent = JSON.parse(
+    localStorage.getItem(KEY) || "null"
+  );
+
+  if(oldContent) {
+
+    selectedImage = oldContent.image || "";
+
+    destination.value = oldContent.url || "";
+
+    if(selectedImage) {
+
+      preview.src = selectedImage;
+      preview.style.display = "block";
+
+    }
+
   }
-}
 
-// Image selection
+} catch(e) {}
+
+// Upload image
+
 fileInput.addEventListener("change", function() {
 
   const file = this.files[0];
 
-  if (!file) return;
+  if(!file) return;
 
-  if (!file.type.startsWith("image/")) {
-    status.textContent = "Please select an image.";
+  if(!file.type.startsWith("image/")) {
+
+    status.textContent = "Select a valid image.";
+
     return;
+
   }
 
   const reader = new FileReader();
 
   reader.onload = function() {
+
     selectedImage = reader.result;
+
     preview.src = selectedImage;
+
     preview.style.display = "block";
-    status.textContent = "Image selected successfully.";
+
+    status.textContent = "Image ready to publish.";
+
   };
 
   reader.readAsDataURL(file);
+
 });
 
 // Save content
+
 function saveContent() {
 
   const url = destination.value.trim();
 
-  if (!selectedImage) {
+  if(!selectedImage) {
+
     status.textContent = "Please upload an image.";
+
     return;
+
   }
 
-  if (!url) {
-    status.textContent = "Please insert a link.";
+  if(!url) {
+
+    status.textContent = "Please enter a destination link.";
+
     return;
+
   }
 
-  let parsedUrl;
+  let parsed;
 
   try {
-    parsedUrl = new URL(url);
-  } catch (e) {
-    status.textContent = "Please enter a valid link.";
+
+    parsed = new URL(url);
+
+  } catch(e) {
+
+    status.textContent = "Enter a valid URL.";
+
     return;
+
   }
 
-  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+  if(!["http:", "https:"].includes(parsed.protocol)) {
+
     status.textContent = "Only HTTP and HTTPS links are allowed.";
+
     return;
+
   }
 
   try {
+
     localStorage.setItem(
-      STORAGE_KEY,
+      KEY,
       JSON.stringify({
         image: selectedImage,
-        url: parsedUrl.href
+        url: parsed.href
       })
     );
 
-    status.textContent = "Content saved successfully!";
-  } catch (e) {
-    status.textContent = "Image too large. Please use a smaller image.";
+    status.textContent =
+    "Content saved successfully!";
+
+  } catch(e) {
+
+    status.textContent =
+    "Image too large. Try a smaller image.";
+
   }
+
 }
 
-// Delete previous content
+// Delete content
+
 function deleteContent() {
 
-  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(KEY);
 
   selectedImage = "";
 
   preview.src = "";
+
   preview.style.display = "none";
 
   fileInput.value = "";
+
   destination.value = "";
 
-  status.textContent = "Previous image and link deleted.";
+  status.textContent =
+  "Previous image and link deleted.";
+
 }
+
 </script>
 
 </body>
