@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staytune Maputo Admin</title>
+
+<style>
+body {
+  margin: 0;
+  padding: 25px 15px;
+  background: #edf5ff;
+  font-family: Arial, sans-serif;
+}
+
+.panel {
+  max-width: 500px;
+  margin: 30px auto;
+  padding: 25px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 5px 25px #0002;
+}
+
+h1 {
+  color: #1877f2;
+  text-align: center;
+}
+
+label {
+  display: block;
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+input {
+  width: 100%;
+  padding: 13px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+img {
+  width: 100%;
+  max-height: 250px;
+  object-fit: contain;
+  margin-top: 15px;
+  display: none;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.save {
+  background: #1877f2;
+  color: white;
+}
+
+.delete {
+  background: #ffe5e5;
+  color: red;
+}
+
+.view {
+  background: #e5f0ff;
+  color: #1877f2;
+}
+
+#status {
+  text-align: center;
+  margin-top: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="panel">
+
+<h1>STAYTUNE MAPUTO</h1>
+
+<p>Manage your landing page content here.</p>
+
+<label>Upload Image</label>
+<input type="file" id="imageFile" accept="image/*">
+
+<img id="preview" alt="Image preview">
+
+<label>Insert Destination Link</label>
+<input
+  type="url"
+  id="destination"
+  placeholder="https://example.com"
+>
+
+<button class="save" onclick="saveContent()">
+SAVE / PUBLISH
+</button>
+
+<button class="delete" onclick="deleteContent()">
+DELETE PREVIOUS IMAGE
+</button>
+
+<button class="view" onclick="location.href='index.html'">
+VIEW LANDING PAGE
+</button>
+
+<p id="status"></p>
+
+</div>
+
+<script>
+const STORAGE_KEY = "staytuneMaputoContent";
+
+let selectedImage = "";
+
+const fileInput = document.getElementById("imageFile");
+const preview = document.getElementById("preview");
+const destination = document.getElementById("destination");
+const status = document.getElementById("status");
+
+// Load existing content
+const current = JSON.parse(
+  localStorage.getItem(STORAGE_KEY) || "null"
+);
+
+if (current) {
+  selectedImage = current.image || "";
+  destination.value = current.url || "";
+
+  if (selectedImage) {
+    preview.src = selectedImage;
+    preview.style.display = "block";
+  }
+}
+
+// Image selection
+fileInput.addEventListener("change", function() {
+
+  const file = this.files[0];
+
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    status.textContent = "Please select an image.";
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function() {
+    selectedImage = reader.result;
+    preview.src = selectedImage;
+    preview.style.display = "block";
+    status.textContent = "Image selected successfully.";
+  };
+
+  reader.readAsDataURL(file);
+});
+
+// Save content
+function saveContent() {
+
+  const url = destination.value.trim();
+
+  if (!selectedImage) {
+    status.textContent = "Please upload an image.";
+    return;
+  }
+
+  if (!url) {
+    status.textContent = "Please insert a link.";
+    return;
+  }
+
+  let parsedUrl;
+
+  try {
+    parsedUrl = new URL(url);
+  } catch (e) {
+    status.textContent = "Please enter a valid link.";
+    return;
+  }
+
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+    status.textContent = "Only HTTP and HTTPS links are allowed.";
+    return;
+  }
+
+  try {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        image: selectedImage,
+        url: parsedUrl.href
+      })
+    );
+
+    status.textContent = "Content saved successfully!";
+  } catch (e) {
+    status.textContent = "Image too large. Please use a smaller image.";
+  }
+}
+
+// Delete previous content
+function deleteContent() {
+
+  localStorage.removeItem(STORAGE_KEY);
+
+  selectedImage = "";
+
+  preview.src = "";
+  preview.style.display = "none";
+
+  fileInput.value = "";
+  destination.value = "";
+
+  status.textContent = "Previous image and link deleted.";
+}
+</script>
+
+</body>
+</html>
